@@ -17,7 +17,9 @@
   </style>
 </head>
 <body>
-  <h1>MyAquaDashboard</h1>
+  <center><h1 id="iframe-title">VMS Activity Log</h1></center>
+  <center><h3 id="next"></h3></center>
+  <center><button id="NextID" onclick="forceNext()">Next</button>  <button id="Pause" onclick="PauseShow()">Pause</button></center>
 
   <iframe src="https://aquavisitorsystem.github.io/activity/index.html" class="active"></iframe>
   <iframe src="https://aquaaerobic.github.io/snippets-web/firestore/"></iframe>
@@ -25,13 +27,56 @@
 
   <script>
     const iframes = document.querySelectorAll('iframe');
-    let current = 0;
+    const titles = [
+      "VMS Activity Log",
+      "1-Minute Guide Activity Log",
+      "VMS Today Report"
+    ];
 
-    setInterval(() => {
+    const titleElement = document.getElementById('iframe-title');
+    const titleNext = document.getElementById('next');
+    let current = 0;
+    let nextcount = 30;
+
+    function GoNext(){
+       nextcount = 30;
+       iframes[current].classList.remove('active');
+      current = (current + 1) % iframes.length;
+      iframes[current].classList.add('active');
+      titleElement.textContent = titles[current]; // update H1 text
+    }
+    var myTimer = setInterval(GoNext, 30000);
+
+    function GoTimer(){
+         titleNext.textContent = "The Next Dashboard Loads in: " + nextcount + " seconds!"; // update H1 text
+      nextcount = (nextcount - 1);
+    }
+    var myShowTimer = setInterval(GoTimer, 1000);
+
+    function forceNext() {
+      titleNext.textContent = "";
+      document.getElementById('NextID').innerText = 'Next';
+      document.getElementById('Pause').style.display = "inline-block";
+      nextcount = 30;
       iframes[current].classList.remove('active');
       current = (current + 1) % iframes.length;
       iframes[current].classList.add('active');
-    }, 30000); // 10 seconds
+      titleElement.textContent = titles[current]; // update H1 text
+      clearInterval(myTimer);
+      myTimer = setInterval(GoNext, 30000);
+      clearInterval(myShowTimer);
+      myShowTimer = setInterval(GoTimer, 1000);
+      titleNext.style.color = "Blue";
+}
+function PauseShow() {
+  clearInterval(myTimer);
+  clearInterval(myShowTimer);
+  titleNext.textContent = "Dashboard Rotation Paused";
+  titleNext.style.color = "Red";
+  document.getElementById('NextID').innerText = 'Start Again';
+  document.getElementById('Pause').style.display = "None";
+}
+titleNext.style.color = "Blue";
   </script>
 </body>
 </html>
