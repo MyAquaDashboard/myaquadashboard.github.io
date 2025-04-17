@@ -16,7 +16,7 @@
     }
   </style>
 </head>
-<body>
+<body style="background-color:powderblue;">
   <center><h1 id="iframe-title">VMS Activity Log</h1></center>
   <center><button id="NextID" onclick="forceNext()">Next</button>  <button id="Pause" onclick="PauseShow()">Pause</button></center>
   
@@ -46,6 +46,7 @@
       current = (current + 1) % iframes.length;
       iframes[current].classList.add('active');
       titleElement.textContent = titles[current]; // update H1 text
+      iframes.contentWindow.location.reload(true);
     }
     var myTimer = setInterval(GoNext, 30000);
 
