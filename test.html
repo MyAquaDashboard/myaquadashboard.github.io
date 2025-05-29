@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>URL Rotator</title>
+  <script>
+    const urls = [
+      'https://example.com/page1',
+      'https://example.com/page2',
+      'https://example.com/page3'
+    ];
+
+    let index = 0;
+
+    function rotateURL() {
+      window.location.href = urls[index];
+      index = (index + 1) % urls.length;
+    }
+
+    setTimeout(() => {
+      rotateURL(); // start after initial delay
+      setInterval(rotateURL, 5000); // repeat every 5 seconds
+    }, 5000);
+  </script>
+</head>
+<body>
+  <h1>Redirecting every 5 seconds...</h1>
+</body>
+</html>
