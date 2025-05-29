@@ -13,20 +13,23 @@
       'http://aquaerprep/Reports/report/ITReports/OnlineUsers'
     ];
 
-    let index = 0;
+ window.onload = function () {
+      // Get current index from localStorage or default to 0
+      let index = parseInt(localStorage.getItem("urlIndex") || "0");
 
-    function rotateURL() {
-      window.location.href = urls[index];
-      index = (index + 1) % urls.length;
-    }
+      // Wait 5 seconds before redirect
+      setTimeout(() => {
+        // Increment index for next time
+        const nextIndex = (index + 1) % urls.length;
+        localStorage.setItem("urlIndex", nextIndex.toString());
 
-    setTimeout(() => {
-      rotateURL(); // start after initial delay
-      setInterval(rotateURL, 5000); // repeat every 5 seconds
-    }, 5000);
+        // Redirect to the current URL
+        window.location.href = urls[index];
+      }, 5000);
+    };
   </script>
 </head>
 <body>
-  <h1>Redirecting every 5 seconds...</h1>
+  <h1>Rotating URLs... Please wait</h1>
 </body>
 </html>
