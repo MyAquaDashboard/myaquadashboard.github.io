@@ -3,167 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>MyAquaDashboard Dynamic</title>
+  <title>MyAquaDashboard Secure</title>
   <style>
-    /* --- CSS RESET & MOBILE STYLES --- */
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f4f9;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden; /* Prevent double scrollbars */
-    }
-
-    header {
-      background: #fff;
-      padding: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      z-index: 10;
-      text-align: center;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 1.2rem;
-      color: #333;
-    }
-
-    #timer-display {
-      font-size: 0.9rem;
-      color: #666;
-      margin-top: 5px;
-      height: 20px;
-    }
-
-    .controls {
-      margin-top: 10px;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: background 0.3s;
-    }
-
+    /* --- CSS RESET & LAYOUT --- */
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #f4f4f9; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { background: #fff; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; text-align: center; }
+    h1 { margin: 0; font-size: 1.2rem; color: #333; }
+    #timer-display { font-size: 0.9rem; color: #666; margin-top: 5px; height: 20px; }
+    .controls { margin-top: 10px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: background 0.3s; }
     button.primary { background-color: #007bff; color: white; }
     button.warning { background-color: #ffc107; color: black; }
     button.danger { background-color: #dc3545; color: white; }
     button.secondary { background-color: #6c757d; color: white; }
+    button:disabled { background-color: #ccc; cursor: not-allowed; }
 
     /* --- IFRAME CONTAINER --- */
-    #dashboard-container {
-      flex: 1;
-      position: relative;
-      width: 100%;
-      background: #e9ecef;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease-in-out;
-    }
-
-    iframe.active {
-      opacity: 1;
-      pointer-events: auto;
-      z-index: 1;
-    }
+    #dashboard-container { flex: 1; position: relative; width: 100%; background: #e9ecef; }
+    iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+    iframe.active { opacity: 1; pointer-events: auto; z-index: 1; }
 
     /* --- ADMIN PANEL --- */
-    #admin-panel {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255,255,255,0.98);
-      z-index: 100;
-      display: none;
-      flex-direction: column;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
-    }
-
+    #admin-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 100; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
     #admin-panel.open { display: flex; }
-
-    .admin-form {
-      max-width: 600px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-
-    .item-list {
-      margin-top: 20px;
-      list-style: none;
-      padding: 0;
-    }
-
-    .item-list li {
-      background: white;
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-radius: 4px;
-    }
-
-    .delete-btn {
-      background: #dc3545;
-      color: white;
-      padding: 5px 10px;
-      font-size: 0.8rem;
-    }
-
-    /* Mobile Tweaks */
-    @media (max-width: 600px) {
-      h1 { font-size: 1rem; }
-      button { padding: 10px 14px; font-size: 0.85rem; }
-    }
+    .admin-form { max-width: 600px; margin: 0 auto; width: 100%; }
+    input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+    .item-list { margin-top: 20px; list-style: none; padding: 0; }
+    .item-list li { background: white; border: 1px solid #ddd; padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
+    
+    /* Auth Section */
+    #auth-section { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #90caf9; }
+    #admin-controls { display: none; } /* Hidden until logged in */
+    
+    .status-msg { font-size: 0.8rem; color: #666; margin-top: 5px; }
   </style>
 </head>
 <body>
 
   <div id="admin-panel">
     <div class="admin-form">
-      <h2>Dashboard Admin</h2>
-      <p>Add new URL to rotation:</p>
-      <input type="text" id="new-title" placeholder="Dashboard Title (e.g. Activity Log)">
-      <input type="url" id="new-url" placeholder="https://...">
-      <button class="primary" onclick="addDashboard()">Add Dashboard</button>
-      <button class="secondary" onclick="toggleAdmin()">Close Admin</button>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Dashboard Admin</h2>
+        <button class="secondary" onclick="toggleAdmin()">Close X</button>
+      </div>
 
-      <h3>Current Dashboards</h3>
-      <ul id="admin-list" class="item-list">
-        </ul>
+      <div id="auth-section">
+        <h3 id="auth-status">Admin Login Required</h3>
+        <div id="login-form">
+          <input type="email" id="admin-email" placeholder="Email">
+          <input type="password" id="admin-pass" placeholder="Password">
+          <button class="primary" onclick="login()">Log In</button>
+        </div>
+        <button id="logout-btn" class="danger" onclick="logout()" style="display:none;">Log Out</button>
+        <p id="login-error" style="color:red; font-size:0.8rem;"></p>
+      </div>
+
+      <div id="admin-controls">
+        <p>Add new URL to rotation:</p>
+        <input type="text" id="new-title" placeholder="Title (e.g. Activity Log)">
+        <input type="url" id="new-url" placeholder="https://...">
+        <button class="primary" onclick="addDashboard()">Add Dashboard</button>
+
+        <h3>Current Dashboards</h3>
+        <ul id="admin-list" class="item-list">
+          </ul>
+      </div>
     </div>
   </div>
 
@@ -177,15 +81,15 @@
     </div>
   </header>
 
-  <div id="dashboard-container">
-    </div>
+  <div id="dashboard-container"></div>
 
   <script type="module">
-    // Import the functions you need from the SDKs you need
+    // --- FIREBASE IMPORTS ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-    // TODO: Replace with your Firebase project configuration
+    // --- CONFIGURATION ---
    const firebaseConfig = {
   apiKey: "AIzaSyBHZBGeFkvPNQFaDEldRIHlX4fagngEQL8",
   authDomain: "myaquadashboard.firebaseapp.com",
@@ -196,9 +100,9 @@
   measurementId: "G-3650R4MWZQ"
 };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
     const dbCollection = "dashboard_items";
 
     // --- APP STATE ---
@@ -209,6 +113,7 @@
     let intervalTimer = null;
     let intervalRotator = null;
     let isPaused = false;
+    let userIsAdmin = false;
 
     // --- DOM ELEMENTS ---
     const container = document.getElementById('dashboard-container');
@@ -216,52 +121,85 @@
     const timerEl = document.getElementById('timer-display');
     const adminList = document.getElementById('admin-list');
     const btnPause = document.getElementById('btn-pause');
-
-    // --- 1. LOAD DATA (REALTIME) ---
-    // This listens to the database. If you change DB, page updates instantly.
-    const q = query(collection(db, dbCollection), orderBy("timestamp", "asc"));
     
+    // Auth DOM
+    const authStatus = document.getElementById('auth-status');
+    const loginForm = document.getElementById('login-form');
+    const logoutBtn = document.getElementById('logout-btn');
+    const adminControls = document.getElementById('admin-controls');
+    const loginError = document.getElementById('login-error');
+
+    // --- 1. AUTH LOGIC ---
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userIsAdmin = true;
+        authStatus.textContent = `Logged in as: ${user.email}`;
+        loginForm.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+        adminControls.style.display = 'block';
+        loginError.textContent = "";
+        renderAdminList(); // Re-render to show delete buttons
+      } else {
+        userIsAdmin = false;
+        authStatus.textContent = "Admin Login Required";
+        loginForm.style.display = 'block';
+        logoutBtn.style.display = 'none';
+        adminControls.style.display = 'none';
+        renderAdminList(); // Re-render to hide delete buttons
+      }
+    });
+
+    window.login = async () => {
+      const email = document.getElementById('admin-email').value;
+      const pass = document.getElementById('admin-pass').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (error) {
+        loginError.textContent = "Error: " + error.message;
+      }
+    };
+
+    window.logout = () => signOut(auth);
+
+    // --- 2. DATA LOGIC ---
+    const q = query(collection(db, dbCollection), orderBy("timestamp", "asc"));
     onSnapshot(q, (snapshot) => {
-      const newData = [];
-      adminList.innerHTML = ""; // Clear admin list
-      
+      dashboards = [];
       snapshot.forEach((doc) => {
-        const item = { id: doc.id, ...doc.data() };
-        newData.push(item);
-        
-        // Render Admin List Item
+        dashboards.push({ id: doc.id, ...doc.data() });
+      });
+      renderAdminList();
+      updateDashboards();
+    });
+
+    function renderAdminList() {
+      adminList.innerHTML = "";
+      dashboards.forEach((item) => {
         const li = document.createElement('li');
+        // Only show delete button if Logged In
+        const deleteBtn = userIsAdmin 
+          ? `<button class="delete-btn" onclick="deleteItem('${item.id}')">Delete</button>` 
+          : `<span style="font-size:0.8rem; color:#999;">(Read Only)</span>`;
+
         li.innerHTML = `
-          <span><b>${item.title}</b><br><small>${item.url}</small></span>
-          <button class="delete-btn" data-id="${doc.id}">Delete</button>
+          <div style="overflow:hidden; text-overflow:ellipsis;">
+            <b>${item.title}</b><br><small>${item.url}</small>
+          </div>
+          ${deleteBtn}
         `;
         adminList.appendChild(li);
       });
+    }
 
-      // Handle Delete Buttons
-      document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          deleteDoc(doc(db, dbCollection, e.target.dataset.id));
-        });
-      });
-
-      updateDashboards(newData);
-    });
-
-    // --- 2. RENDER DASHBOARDS ---
-    function updateDashboards(newData) {
-      dashboards = newData;
-      
-      // If no data, show message
+    // --- 3. DASHBOARD DISPLAY LOGIC ---
+    function updateDashboards() {
       if (dashboards.length === 0) {
         titleEl.textContent = "No Dashboards Configured";
-        container.innerHTML = "<p style='text-align:center; padding:20px;'>Go to Admin to add URLs.</p>";
         return;
       }
 
-      // Sync DOM with Data
-      // We check if iframe exists to avoid reloading existing ones unnecessarily
-      dashboards.forEach((d, index) => {
+      // Sync Iframes
+      dashboards.forEach((d) => {
         let frame = document.getElementById(`frame-${d.id}`);
         if (!frame) {
           frame = document.createElement('iframe');
@@ -271,57 +209,44 @@
         }
       });
 
-      // Remove frames that are no longer in data
+      // Cleanup old frames
       const currentIds = dashboards.map(d => `frame-${d.id}`);
-      const existingFrames = document.querySelectorAll('iframe');
-      existingFrames.forEach(f => {
-        if (!currentIds.includes(f.id)) {
-          f.remove();
-        }
+      document.querySelectorAll('iframe').forEach(f => {
+        if (!currentIds.includes(f.id)) f.remove();
       });
 
-      // Reset cycle if needed
+      // Reset cycle if out of bounds
       if (currentIndex >= dashboards.length) currentIndex = 0;
-      showCurrentDashboard();
       
-      // Start timers if not running
+      // If this is the first load, show immediately
+      const active = document.querySelector('iframe.active');
+      if (!active) showCurrentDashboard();
+
       if (!intervalRotator && !isPaused) startRotation();
     }
 
-    // --- 3. DISPLAY LOGIC ---
     function showCurrentDashboard() {
       if (dashboards.length === 0) return;
-
-      // Hide all
       document.querySelectorAll('iframe').forEach(f => f.classList.remove('active'));
-      
-      // Show current
       const currentItem = dashboards[currentIndex];
       const activeFrame = document.getElementById(`frame-${currentItem.id}`);
       if (activeFrame) {
         activeFrame.classList.add('active');
         titleEl.textContent = currentItem.title;
-        
-        // Optional: Reload the frame when it appears to get fresh data
-        // activeFrame.contentWindow.location.reload(); 
       }
     }
 
     function nextSlide() {
+      if (dashboards.length === 0) return;
       currentIndex = (currentIndex + 1) % dashboards.length;
       showCurrentDashboard();
-      currentCount = timerDuration; // Reset countdown
+      currentCount = timerDuration;
     }
 
     function startRotation() {
-      // Clear existing
       if (intervalRotator) clearInterval(intervalRotator);
       if (intervalTimer) clearInterval(intervalTimer);
-
-      // Rotation Timer (30s)
       intervalRotator = setInterval(nextSlide, timerDuration * 1000);
-
-      // Countdown Timer (1s)
       intervalTimer = setInterval(() => {
         currentCount--;
         timerEl.textContent = `Next update in: ${currentCount}s`;
@@ -329,20 +254,11 @@
       }, 1000);
     }
 
-    // --- 4. CONTROLS EXPORTED TO WINDOW ---
-    // We attach these to window so the HTML onclick="" attributes can see them
-    
+    // --- 4. EXPORTED FUNCTIONS ---
     window.forceNext = () => {
-      if (dashboards.length === 0) return;
-      
-      // Reset logic
       currentCount = timerDuration;
       nextSlide();
-      
-      // If paused, keep paused state but update view
-      if (!isPaused) {
-        startRotation();
-      }
+      if (!isPaused) startRotation();
     };
 
     window.togglePause = () => {
@@ -361,34 +277,32 @@
     };
 
     window.toggleAdmin = () => {
-      const panel = document.getElementById('admin-panel');
-      panel.classList.toggle('open');
+      document.getElementById('admin-panel').classList.toggle('open');
     };
 
     window.addDashboard = async () => {
-      const titleInput = document.getElementById('new-title');
-      const urlInput = document.getElementById('new-url');
-      
-      if (titleInput.value && urlInput.value) {
+      const title = document.getElementById('new-title').value;
+      const url = document.getElementById('new-url').value;
+      if (title && url) {
         try {
-          await addDoc(collection(db, dbCollection), {
-            title: titleInput.value,
-            url: urlInput.value,
-            timestamp: Date.now()
-          });
-          // Clear inputs
-          titleInput.value = '';
-          urlInput.value = '';
-          alert('Added!');
+          await addDoc(collection(db, dbCollection), { title, url, timestamp: Date.now() });
+          document.getElementById('new-title').value = '';
+          document.getElementById('new-url').value = '';
         } catch (e) {
-          console.error("Error adding document: ", e);
-          alert("Error adding. Check console.");
+          alert("Error: " + e.message);
         }
-      } else {
-        alert("Please fill in both fields");
       }
     };
 
+    window.deleteItem = async (id) => {
+      if(confirm('Are you sure?')) {
+        try {
+          await deleteDoc(doc(db, dbCollection, id));
+        } catch(e) {
+          alert("Error: " + e.message);
+        }
+      }
+    }
   </script>
 </body>
 </html>
