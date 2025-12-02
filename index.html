@@ -2,86 +2,393 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MyAquaDashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>MyAquaDashboard Dynamic</title>
   <style>
+    /* --- CSS RESET & MOBILE STYLES --- */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f9;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden; /* Prevent double scrollbars */
+    }
+
+    header {
+      background: #fff;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      z-index: 10;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #333;
+    }
+
+    #timer-display {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 5px;
+      height: 20px;
+    }
+
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+
+    button.primary { background-color: #007bff; color: white; }
+    button.warning { background-color: #ffc107; color: black; }
+    button.danger { background-color: #dc3545; color: white; }
+    button.secondary { background-color: #6c757d; color: white; }
+
+    /* --- IFRAME CONTAINER --- */
+    #dashboard-container {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      background: #e9ecef;
+    }
+
     iframe {
       width: 100%;
-      height: 100vh;
+      height: 100%;
       border: none;
-      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease-in-out;
     }
+
     iframe.active {
-      display: block;
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 1;
+    }
+
+    /* --- ADMIN PANEL --- */
+    #admin-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.98);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    #admin-panel.open { display: flex; }
+
+    .admin-form {
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .item-list {
+      margin-top: 20px;
+      list-style: none;
+      padding: 0;
+    }
+
+    .item-list li {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 4px;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+      padding: 5px 10px;
+      font-size: 0.8rem;
+    }
+
+    /* Mobile Tweaks */
+    @media (max-width: 600px) {
+      h1 { font-size: 1rem; }
+      button { padding: 10px 14px; font-size: 0.85rem; }
     }
   </style>
 </head>
-<body style="background-color:white;">
-  <center><h1 id="iframe-title">VMS Activity Log</h1></center>
-  <center><button id="NextID" onclick="forceNext()">Next</button>  <button id="Pause" onclick="PauseShow()">Pause</button></center>
-  
-  <center><p id="next"></p></center>
-  <iframe src="https://aquavisitorsystem.github.io/activity/index.html" class="active"></iframe>
-  <iframe src="https://aquaaerobic.github.io/snippets-web/firestore/"></iframe>
-   <iframe src="https://aquaaerobic.github.io/updatelog.html"></iframe>
-  <iframe src="https://aquavisitorsystem.github.io/?report=today"></iframe>
-   <iframe src="onlineusers.html"></iframe>
+<body>
 
-  <script>
-    const iframes = document.querySelectorAll('iframe');
-    const titles = [
-      "VMS Activity Log",
-      "1-Minute Guide Activity Log",
-      "1-Minute App Update Log",
-      "VMS Today Report",
-      "Online Users"
-    ];
+  <div id="admin-panel">
+    <div class="admin-form">
+      <h2>Dashboard Admin</h2>
+      <p>Add new URL to rotation:</p>
+      <input type="text" id="new-title" placeholder="Dashboard Title (e.g. Activity Log)">
+      <input type="url" id="new-url" placeholder="https://...">
+      <button class="primary" onclick="addDashboard()">Add Dashboard</button>
+      <button class="secondary" onclick="toggleAdmin()">Close Admin</button>
 
-    const titleElement = document.getElementById('iframe-title');
-    const titleNext = document.getElementById('next');
-    let current = 0;
-    let nextcount = 30;
+      <h3>Current Dashboards</h3>
+      <ul id="admin-list" class="item-list">
+        </ul>
+    </div>
+  </div>
 
-    function GoNext(){
-       nextcount = 30;
-       iframes[current].classList.remove('active');
-      current = (current + 1) % iframes.length;
-      iframes[current].classList.add('active');
-      titleElement.textContent = titles[current]; // update H1 text
-      iframes.contentWindow.location.reload(true);
+  <header>
+    <h1 id="iframe-title">Loading...</h1>
+    <div id="timer-display">Waiting for data...</div>
+    <div class="controls">
+      <button id="btn-next" class="primary" onclick="forceNext()">Next</button>
+      <button id="btn-pause" class="warning" onclick="togglePause()">Pause</button>
+      <button id="btn-admin" class="secondary" onclick="toggleAdmin()">⚙️ Admin</button>
+    </div>
+  </header>
+
+  <div id="dashboard-container">
+    </div>
+
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    // TODO: Replace with your Firebase project configuration
+   const firebaseConfig = {
+  apiKey: "AIzaSyBHZBGeFkvPNQFaDEldRIHlX4fagngEQL8",
+  authDomain: "myaquadashboard.firebaseapp.com",
+  projectId: "myaquadashboard",
+  storageBucket: "myaquadashboard.firebasestorage.app",
+  messagingSenderId: "766053074232",
+  appId: "1:766053074232:web:3573958b35e899bc982dcd",
+  measurementId: "G-3650R4MWZQ"
+};
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const dbCollection = "dashboard_items";
+
+    // --- APP STATE ---
+    let dashboards = [];
+    let currentIndex = 0;
+    let timerDuration = 30;
+    let currentCount = timerDuration;
+    let intervalTimer = null;
+    let intervalRotator = null;
+    let isPaused = false;
+
+    // --- DOM ELEMENTS ---
+    const container = document.getElementById('dashboard-container');
+    const titleEl = document.getElementById('iframe-title');
+    const timerEl = document.getElementById('timer-display');
+    const adminList = document.getElementById('admin-list');
+    const btnPause = document.getElementById('btn-pause');
+
+    // --- 1. LOAD DATA (REALTIME) ---
+    // This listens to the database. If you change DB, page updates instantly.
+    const q = query(collection(db, dbCollection), orderBy("timestamp", "asc"));
+    
+    onSnapshot(q, (snapshot) => {
+      const newData = [];
+      adminList.innerHTML = ""; // Clear admin list
+      
+      snapshot.forEach((doc) => {
+        const item = { id: doc.id, ...doc.data() };
+        newData.push(item);
+        
+        // Render Admin List Item
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span><b>${item.title}</b><br><small>${item.url}</small></span>
+          <button class="delete-btn" data-id="${doc.id}">Delete</button>
+        `;
+        adminList.appendChild(li);
+      });
+
+      // Handle Delete Buttons
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          deleteDoc(doc(db, dbCollection, e.target.dataset.id));
+        });
+      });
+
+      updateDashboards(newData);
+    });
+
+    // --- 2. RENDER DASHBOARDS ---
+    function updateDashboards(newData) {
+      dashboards = newData;
+      
+      // If no data, show message
+      if (dashboards.length === 0) {
+        titleEl.textContent = "No Dashboards Configured";
+        container.innerHTML = "<p style='text-align:center; padding:20px;'>Go to Admin to add URLs.</p>";
+        return;
+      }
+
+      // Sync DOM with Data
+      // We check if iframe exists to avoid reloading existing ones unnecessarily
+      dashboards.forEach((d, index) => {
+        let frame = document.getElementById(`frame-${d.id}`);
+        if (!frame) {
+          frame = document.createElement('iframe');
+          frame.id = `frame-${d.id}`;
+          frame.src = d.url;
+          container.appendChild(frame);
+        }
+      });
+
+      // Remove frames that are no longer in data
+      const currentIds = dashboards.map(d => `frame-${d.id}`);
+      const existingFrames = document.querySelectorAll('iframe');
+      existingFrames.forEach(f => {
+        if (!currentIds.includes(f.id)) {
+          f.remove();
+        }
+      });
+
+      // Reset cycle if needed
+      if (currentIndex >= dashboards.length) currentIndex = 0;
+      showCurrentDashboard();
+      
+      // Start timers if not running
+      if (!intervalRotator && !isPaused) startRotation();
     }
-    var myTimer = setInterval(GoNext, 30000);
 
-    function GoTimer(){
-         titleNext.textContent = "The Next Dashboard Loads in: " + nextcount + " seconds!"; // update H1 text
-      nextcount = (nextcount - 1);
+    // --- 3. DISPLAY LOGIC ---
+    function showCurrentDashboard() {
+      if (dashboards.length === 0) return;
+
+      // Hide all
+      document.querySelectorAll('iframe').forEach(f => f.classList.remove('active'));
+      
+      // Show current
+      const currentItem = dashboards[currentIndex];
+      const activeFrame = document.getElementById(`frame-${currentItem.id}`);
+      if (activeFrame) {
+        activeFrame.classList.add('active');
+        titleEl.textContent = currentItem.title;
+        
+        // Optional: Reload the frame when it appears to get fresh data
+        // activeFrame.contentWindow.location.reload(); 
+      }
     }
-    var myShowTimer = setInterval(GoTimer, 1000);
 
-    function forceNext() {
-      titleNext.textContent = "";
-      document.getElementById('NextID').innerText = 'Next';
-      document.getElementById('Pause').style.display = "inline-block";
-      nextcount = 30;
-      iframes[current].classList.remove('active');
-      current = (current + 1) % iframes.length;
-      iframes[current].classList.add('active');
-      titleElement.textContent = titles[current]; // update H1 text
-      clearInterval(myTimer);
-      myTimer = setInterval(GoNext, 30000);
-      clearInterval(myShowTimer);
-      myShowTimer = setInterval(GoTimer, 1000);
-      titleNext.style.color = "Blue";
-}
-function PauseShow() {
-  clearInterval(myTimer);
-  clearInterval(myShowTimer);
-  titleNext.textContent = "Dashboard Rotation Paused";
-  titleNext.style.color = "Red";
-  document.getElementById('NextID').innerText = 'Start Again';
-  document.getElementById('Pause').style.display = "None";
-}
-titleNext.style.color = "Blue";
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % dashboards.length;
+      showCurrentDashboard();
+      currentCount = timerDuration; // Reset countdown
+    }
+
+    function startRotation() {
+      // Clear existing
+      if (intervalRotator) clearInterval(intervalRotator);
+      if (intervalTimer) clearInterval(intervalTimer);
+
+      // Rotation Timer (30s)
+      intervalRotator = setInterval(nextSlide, timerDuration * 1000);
+
+      // Countdown Timer (1s)
+      intervalTimer = setInterval(() => {
+        currentCount--;
+        timerEl.textContent = `Next update in: ${currentCount}s`;
+        if (currentCount <= 0) currentCount = timerDuration;
+      }, 1000);
+    }
+
+    // --- 4. CONTROLS EXPORTED TO WINDOW ---
+    // We attach these to window so the HTML onclick="" attributes can see them
+    
+    window.forceNext = () => {
+      if (dashboards.length === 0) return;
+      
+      // Reset logic
+      currentCount = timerDuration;
+      nextSlide();
+      
+      // If paused, keep paused state but update view
+      if (!isPaused) {
+        startRotation();
+      }
+    };
+
+    window.togglePause = () => {
+      isPaused = !isPaused;
+      if (isPaused) {
+        clearInterval(intervalRotator);
+        clearInterval(intervalTimer);
+        timerEl.textContent = "Rotation Paused";
+        timerEl.style.color = "red";
+        btnPause.textContent = "Resume";
+      } else {
+        startRotation();
+        timerEl.style.color = "#666";
+        btnPause.textContent = "Pause";
+      }
+    };
+
+    window.toggleAdmin = () => {
+      const panel = document.getElementById('admin-panel');
+      panel.classList.toggle('open');
+    };
+
+    window.addDashboard = async () => {
+      const titleInput = document.getElementById('new-title');
+      const urlInput = document.getElementById('new-url');
+      
+      if (titleInput.value && urlInput.value) {
+        try {
+          await addDoc(collection(db, dbCollection), {
+            title: titleInput.value,
+            url: urlInput.value,
+            timestamp: Date.now()
+          });
+          // Clear inputs
+          titleInput.value = '';
+          urlInput.value = '';
+          alert('Added!');
+        } catch (e) {
+          console.error("Error adding document: ", e);
+          alert("Error adding. Check console.");
+        }
+      } else {
+        alert("Please fill in both fields");
+      }
+    };
+
   </script>
 </body>
 </html>
