@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Per-item display duration: each dashboard can set its own rotation seconds (admin panel inline field; optional on add) — header countdown and rotator honor per-item values
 - Drag-to-reorder in the admin list (⋮⋮ handle), persisted via a new `order` field in Firestore
 - "⟳ Reload" button to re-load the current iframe (recovers local sites when the server comes back)
-- Friendly "Loading: …" placeholder page inside frames instead of a blank white box while/instead of the target site loading
+- Per-frame "Loading: …" overlay with a Retry button, shown only for the active frame until it finishes loading (an inline note explains why `http://` LAN sites can't load from the `https://` dashboard)
 - Toast notifications for add / delete / reorder / duration feedback
 - Auto-derive a dashboard title from the URL when no title is given
 - "Common local app paths" reference card in the admin panel (e.g. `/nodejsapps/`)
@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Layout uses flex `min-height: 0` so the iframe area and footer scale correctly in all browsers
 
 ### Fixed
+- Dashboards not loading at all (stuck on the "Loading: …" placeholder): caused by setting both `srcdoc` and `src` on the same iframe, which browsers honor in favor of `srcdoc` and never navigate to the real URL. Replaced with a separate overlay div that clears itself when the frame fires `load`
 - Countdown timer can no longer display negative seconds
 - Pausing now clears the rotator interval fully, so resume always starts a clean cycle
 - Item titles/URLs in the admin list and iframe placeholders are inserted as text, preventing HTML injection from stored values
