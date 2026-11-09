@@ -1,0 +1,17 @@
+# Dashboard
+
+repo: https://github.com/MyAquaDashboard/myaquadashboard.github.io.git
+
+1) Create/Update Changelog.md with the latest changes.
+   (The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+   and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html))
+
+2) Add the date and list the latest changes at the top of Changelog.md.
+
+3) Stage, commit, and push:
+   git add . && git commit -m "See Changelog.md" && git push
+
+Note: .gitignore excludes data/, log/, and users/ or keys and credentials from version control.
+Note: You will be prompted for Gitea credentials (username/password) on push.
+
+# Developer Complete Below Steps 

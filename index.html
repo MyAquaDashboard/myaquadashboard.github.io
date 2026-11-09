@@ -6,36 +6,64 @@
   <title>MyAquaDashboard Secure</title>
   <style>
     /* --- CSS RESET & LAYOUT --- */
+    * { box-sizing: border-box; }
     body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #f4f4f9; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    header { background: #fff; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; text-align: center; }
-    h1 { margin: 0; font-size: 1.2rem; color: #333; }
+    header { background: #fff; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; text-align: center; flex-shrink: 0; }
+    h1 { margin: 0; font-size: 1.2rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #timer-display { font-size: 0.9rem; color: #666; margin-top: 5px; height: 20px; }
-    .controls { margin-top: 10px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .controls { margin-top: 10px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; align-items: center; }
     button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: background 0.3s; }
     button.primary { background-color: #007bff; color: white; }
     button.warning { background-color: #ffc107; color: black; }
     button.danger { background-color: #dc3545; color: white; }
     button.secondary { background-color: #6c757d; color: white; }
     button:disabled { background-color: #ccc; cursor: not-allowed; }
+    select { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; background: #fff; max-width: 240px; }
 
     /* --- IFRAME CONTAINER --- */
-    #dashboard-container { flex: 1; position: relative; width: 100%; background: #e9ecef; }
+    #dashboard-container { flex: 1; position: relative; width: 100%; background: #e9ecef; min-height: 0; }
     iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
     iframe.active { opacity: 1; pointer-events: auto; z-index: 1; }
+
+    /* --- FOOTER BAR --- */
+    #footer-bar { background: #fff; border-top: 1px solid #ddd; padding: 6px 12px; display: flex; align-items: center; gap: 14px; font-size: 0.85rem; color: #555; flex-shrink: 0; }
+    #footer-clock { font-variant-numeric: tabular-nums; min-width: 64px; }
+    #footer-count { white-space: nowrap; }
+    #footer-bar select { margin-left: auto; padding: 4px 8px; font-size: 0.85rem; max-width: 220px; }
+    .footer-btn { padding: 4px 10px; font-size: 0.8rem; }
+
+    /* --- TOAST --- */
+    #toast { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%) translateY(20px); background: #333; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 0.9rem; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* --- ADMIN PANEL --- */
     #admin-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 100; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; }
     #admin-panel.open { display: flex; }
-    .admin-form { max-width: 600px; margin: 0 auto; width: 100%; }
-    input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+    .admin-form { max-width: 640px; margin: 0 auto; width: 100%; }
+    .admin-form input, .admin-form input[type="number"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 0.95rem; }
+    .admin-form label { font-size: 0.8rem; color: #666; display: block; margin-bottom: 3px; }
+    .admin-row { display: flex; gap: 10px; }
+    .admin-row > div { flex: 1; }
+
     .item-list { margin-top: 20px; list-style: none; padding: 0; }
-    .item-list li { background: white; border: 1px solid #ddd; padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
-    
+    .item-list li { background: white; border: 1px solid #ddd; padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 4px; }
+    .item-list li.drag-over { border: 2px solid #007bff; background: #e7f1ff; }
+    .item-info { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+    .item-info small { color: #777; word-break: break-all; }
+    .item-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .drag-handle { cursor: grab; color: #999; font-size: 1rem; padding: 4px 6px; user-select: none; }
+    .drag-handle:active { cursor: grabbing; }
+    .dur-input { width: 60px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
+    .item-list li button { padding: 6px 10px; font-size: 0.8rem; }
+
     /* Auth Section */
     #auth-section { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #90caf9; }
     #admin-controls { display: none; } /* Hidden until logged in */
-    
     .status-msg { font-size: 0.8rem; color: #666; margin-top: 5px; }
+
+    .local-refs { background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: #6d5a00; }
+    .local-refs a { color: #0d47a1; word-break: break-all; }
+    .local-refs code { background: #fff3cd; padding: 1px 5px; border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -59,12 +87,29 @@
       </div>
 
       <div id="admin-controls">
-        <p>Add new URL to rotation:</p>
-        <input type="text" id="new-title" placeholder="Title (e.g. Activity Log)">
-        <input type="url" id="new-url" placeholder="https://...">
+        <p>Add new URL to rotation (local sites like <code>http://&lt;server&gt;/nodejsapps/...</code> work too):</p>
+        <div class="admin-row">
+          <div style="flex:2;">
+            <label for="new-title">Title</label>
+            <input type="text" id="new-title" placeholder="Title (e.g. Activity Log)">
+          </div>
+          <div style="flex:1;">
+            <label for="new-duration">Seconds (optional)</label>
+            <input type="number" id="new-duration" placeholder="30" min="5">
+          </div>
+        </div>
+        <label for="new-url">URL</label>
+        <input type="text" id="new-url" placeholder="http://www.aqua-aerobic.net/nodejsapps/  or  https://...">
         <button class="primary" onclick="addDashboard()">Add Dashboard</button>
 
-        <h3>Current Dashboards</h3>
+        <div class="local-refs">
+          <b>Common local app paths</b> (fill in your server host):
+          <code>/nodejsapps/</code>
+          <code>/nodejsapps/activity/</code>
+          <code>/nodejsapps/online-users/</code>
+        </div>
+
+        <h3>Current Dashboards <small style="font-weight:normal; color:#777;">(drag ⋮⋮ to reorder)</small></h3>
         <ul id="admin-list" class="item-list">
           </ul>
       </div>
@@ -77,28 +122,37 @@
     <div class="controls">
       <button id="btn-next" class="primary" onclick="forceNext()">Next</button>
       <button id="btn-pause" class="warning" onclick="togglePause()">Pause</button>
-      <button id="btn-admin" class="secondary" onclick="toggleAdmin()">⚙️ Admin</button>
+      <button class="secondary" onclick="reloadCurrent()">⟳ Reload</button>
+      <button class="secondary" onclick="toggleAdmin()">⚙️ Admin</button>
     </div>
   </header>
 
   <div id="dashboard-container"></div>
 
+  <div id="footer-bar">
+    <span id="footer-clock">--:--</span>
+    <span id="footer-count">—</span>
+    <select id="footer-select" onchange="jumpTo(this.selectedIndex)" title="Jump to dashboard"></select>
+  </div>
+
+  <div id="toast"></div>
+
   <script type="module">
     // --- FIREBASE IMPORTS ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
     // --- CONFIGURATION ---
-   const firebaseConfig = {
-  apiKey: "AIzaSyBHZBGeFkvPNQFaDEldRIHlX4fagngEQL8",
-  authDomain: "myaquadashboard.firebaseapp.com",
-  projectId: "myaquadashboard",
-  storageBucket: "myaquadashboard.firebasestorage.app",
-  messagingSenderId: "766053074232",
-  appId: "1:766053074232:web:3573958b35e899bc982dcd",
-  measurementId: "G-3650R4MWZQ"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyBHZBGeFkvPNQFaDEldRIHlX4fagngEQL8",
+      authDomain: "myaquadashboard.firebaseapp.com",
+      projectId: "myaquadashboard",
+      storageBucket: "myaquadashboard.firebasestorage.app",
+      messagingSenderId: "766053074232",
+      appId: "1:766053074232:web:3573958b35e899bc982dcd",
+      measurementId: "G-3650R4MWZQ"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -108,12 +162,14 @@
     // --- APP STATE ---
     let dashboards = [];
     let currentIndex = 0;
-    let timerDuration = 30;
-    let currentCount = timerDuration;
+    let defaultDuration = 30;
+    let currentDuration = defaultDuration;
+    let currentCount = currentDuration;
     let intervalTimer = null;
     let intervalRotator = null;
     let isPaused = false;
     let userIsAdmin = false;
+    let draggingItem = null;
 
     // --- DOM ELEMENTS ---
     const container = document.getElementById('dashboard-container');
@@ -121,13 +177,42 @@
     const timerEl = document.getElementById('timer-display');
     const adminList = document.getElementById('admin-list');
     const btnPause = document.getElementById('btn-pause');
-    
+    const footerClock = document.getElementById('footer-clock');
+    const footerCount = document.getElementById('footer-count');
+    const footerSelect = document.getElementById('footer-select');
+    const toastEl = document.getElementById('toast');
+
     // Auth DOM
     const authStatus = document.getElementById('auth-status');
     const loginForm = document.getElementById('login-form');
     const logoutBtn = document.getElementById('logout-btn');
     const adminControls = document.getElementById('admin-controls');
     const loginError = document.getElementById('login-error');
+
+    // --- UTILITIES ---
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 2500);
+    }
+
+    function itemDuration(d) {
+      const n = Number(d.duration);
+      return (Number.isFinite(n) && n >= 5) ? n : defaultDuration;
+    }
+
+    // Sort: explicit `order` field first (asc), then legacy items by timestamp/insertion order
+    function sortDashboards(list) {
+      return list.slice().sort((a, b) => {
+        const ao = (a.order !== undefined && a.order !== null) ? a.order : Infinity;
+        const bo = (b.order !== undefined && b.order !== null) ? b.order : Infinity;
+        if (ao !== bo) return ao - bo;
+        const ta = a.timestamp || 0, tb = b.timestamp || 0;
+        if (ta !== tb) return ta - tb;
+        return 0;
+      });
+    }
 
     // --- 1. AUTH LOGIC ---
     onAuthStateChanged(auth, (user) => {
@@ -138,22 +223,24 @@
         logoutBtn.style.display = 'inline-block';
         adminControls.style.display = 'block';
         loginError.textContent = "";
-        renderAdminList(); // Re-render to show delete buttons
+        renderAdminList(); // Re-render to show management controls
       } else {
         userIsAdmin = false;
         authStatus.textContent = "Admin Login Required";
         loginForm.style.display = 'block';
         logoutBtn.style.display = 'none';
         adminControls.style.display = 'none';
-        renderAdminList(); // Re-render to hide delete buttons
+        renderAdminList(); // Re-render to hide management controls
       }
     });
 
     window.login = async () => {
-      const email = document.getElementById('admin-email').value;
+      const email = document.getElementById('admin-email').value.trim();
       const pass = document.getElementById('admin-pass').value;
+      if (!email || !pass) { loginError.textContent = "Enter email and password."; return; }
       try {
         await signInWithEmailAndPassword(auth, email, pass);
+        toast("Logged in.");
       } catch (error) {
         loginError.textContent = "Error: " + error.message;
       }
@@ -162,50 +249,165 @@
     window.logout = () => signOut(auth);
 
     // --- 2. DATA LOGIC ---
-    const q = query(collection(db, dbCollection), orderBy("timestamp", "asc"));
-    onSnapshot(q, (snapshot) => {
+    onSnapshot(collection(db, dbCollection), (snapshot) => {
       dashboards = [];
-      snapshot.forEach((doc) => {
-        dashboards.push({ id: doc.id, ...doc.data() });
+      snapshot.forEach((d) => {
+        dashboards.push({ id: d.id, ...d.data() });
       });
+      dashboards = sortDashboards(dashboards);
       renderAdminList();
       updateDashboards();
+    }, (err) => {
+      timerEl.textContent = "⚠ Could not load dashboards: " + err.message;
     });
 
     function renderAdminList() {
       adminList.innerHTML = "";
-      dashboards.forEach((item) => {
+      dashboards.forEach((item, i) => {
         const li = document.createElement('li');
-        // Only show delete button if Logged In
-        const deleteBtn = userIsAdmin 
-          ? `<button class="delete-btn" onclick="deleteItem('${item.id}')">Delete</button>` 
-          : `<span style="font-size:0.8rem; color:#999;">(Read Only)</span>`;
+        li.dataset.id = item.id;
+        li.dataset.index = i;
 
-        li.innerHTML = `
-          <div style="overflow:hidden; text-overflow:ellipsis;">
-            <b>${item.title}</b><br><small>${item.url}</small>
-          </div>
-          ${deleteBtn}
-        `;
+        // Title
+        const b = document.createElement('b');
+        b.textContent = item.title || "(untitled)";
+        // URL
+        const small = document.createElement('small');
+        small.textContent = item.url;
+        // Optional description
+        const desc = document.createElement('small');
+        if (item.description) { desc.textContent = item.description; desc.style.display = 'block'; }
+
+        const info = document.createElement('div');
+        info.className = 'item-info';
+        info.appendChild(b);
+        info.appendChild(small);
+        if (item.description) info.appendChild(desc);
+        li.appendChild(info);
+
+        const actions = document.createElement('div');
+        actions.className = 'item-actions';
+
+        if (userIsAdmin) {
+          const handle = document.createElement('span');
+          handle.className = 'drag-handle';
+          handle.textContent = '⋮⋮';
+          handle.title = 'Drag to reorder';
+          actions.appendChild(handle);
+
+          const dur = document.createElement('input');
+          dur.type = 'number';
+          dur.min = '5';
+          dur.className = 'dur-input';
+          dur.title = 'Display seconds for this item';
+          dur.value = itemDuration(item);
+          dur.addEventListener('change', () => updateItemDuration(item.id, dur.value));
+          actions.appendChild(dur);
+
+          const del = document.createElement('button');
+          del.className = 'danger';
+          del.textContent = 'Delete';
+          del.addEventListener('click', () => deleteItem(item.id));
+          actions.appendChild(del);
+        } else {
+          const ro = document.createElement('span');
+          ro.style.cssText = 'font-size:0.8rem; color:#999;';
+          ro.textContent = '(Read Only)';
+          actions.appendChild(ro);
+        }
+
+        li.appendChild(actions);
         adminList.appendChild(li);
       });
+      attachDragHandlers();
+    }
+
+    // --- DRAG & DROP REORDER (admin only) ---
+    function attachDragHandlers() {
+      const lis = [...adminList.querySelectorAll('li')];
+      lis.forEach(li => {
+        li.draggable = userIsAdmin;
+        li.addEventListener('dragstart', (e) => {
+          draggingItem = li;
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', li.dataset.id);
+        });
+        li.addEventListener('dragover', (e) => {
+          if (!draggingItem || draggingItem === li) return;
+          e.preventDefault();
+          const lis = [...adminList.querySelectorAll('li')];
+          const thisIdx = lis.indexOf(li);
+          const dragIdx = lis.indexOf(draggingItem);
+          if (thisIdx > dragIdx) li.after(draggingItem); else li.before(draggingItem);
+        });
+        li.addEventListener('drop', (e) => { e.preventDefault(); });
+        li.addEventListener('dragend', () => {
+          if (!draggingItem) return;
+          draggingItem = null;
+          saveOrder();
+        });
+      });
+    }
+
+    async function saveOrder() {
+      if (!userIsAdmin) return;
+      const newOrder = [...adminList.querySelectorAll('li')].map(li => li.dataset.id);
+      const currentIds = dashboards.map(d => d.id);
+      if (newOrder.length !== currentIds.length || newOrder.some(id => !currentIds.includes(id))) return;
+
+      // Only write if the order actually changed
+      const changed = newOrder.some((id, i) => id !== dashboards[i].id);
+      if (!changed) return;
+
+      const updates = {};
+      newOrder.forEach((id, i) => { updates[id] = i * 1000; });
+      try {
+        for (const [id, order] of Object.entries(updates)) {
+          await updateDoc(doc(db, dbCollection, id), { order });
+        }
+        toast("Order saved.");
+      } catch (e) {
+        toast("Order save failed: " + e.message);
+        renderAdminList();
+      }
+    }
+
+    async function updateItemDuration(id, value) {
+      if (!userIsAdmin) return;
+      const n = Math.floor(Number(value));
+      if (!Number.isFinite(n) || n < 5) { toast("Duration must be at least 5 seconds."); renderAdminList(); return; }
+      try {
+        await updateDoc(doc(db, dbCollection, id), { duration: n });
+        toast(`Duration set to ${n}s.`);
+      } catch (e) {
+        toast("Update failed: " + e.message);
+      }
     }
 
     // --- 3. DASHBOARD DISPLAY LOGIC ---
     function updateDashboards() {
       if (dashboards.length === 0) {
         titleEl.textContent = "No Dashboards Configured";
+        footerCount.textContent = "0 dashboards";
+        footerSelect.innerHTML = '<option value="">—</option>';
         return;
       }
 
-      // Sync Iframes
+      // Sync iframes (start with a friendly fallback page; swap to real src when ready)
       dashboards.forEach((d) => {
         let frame = document.getElementById(`frame-${d.id}`);
         if (!frame) {
           frame = document.createElement('iframe');
           frame.id = `frame-${d.id}`;
+          frame.srcdoc = `<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:Segoe UI,sans-serif;background:#f4f4f9;color:#888;"><div>Loading: <b style="margin-left:6px;">${(d.title || d.url || '').replace(/</g, '&lt;')}</b></div></body></html>`;
+          frame.addEventListener('load', () => {
+            if (frame.classList.contains('active')) showCurrentDashboard();
+          });
           frame.src = d.url;
           container.appendChild(frame);
+        } else if (frame.src !== d.url) {
+          // URL was edited — repoint the frame
+          frame.src = d.url;
         }
       });
 
@@ -217,7 +419,7 @@
 
       // Reset cycle if out of bounds
       if (currentIndex >= dashboards.length) currentIndex = 0;
-      
+
       // If this is the first load, show immediately
       const active = document.querySelector('iframe.active');
       if (!active) showCurrentDashboard();
@@ -234,29 +436,62 @@
         activeFrame.classList.add('active');
         titleEl.textContent = currentItem.title;
       }
+      footerSelect.value = String(currentIndex);
+      updateFooterCount();
     }
 
     function nextSlide() {
       if (dashboards.length === 0) return;
       currentIndex = (currentIndex + 1) % dashboards.length;
       showCurrentDashboard();
-      currentCount = timerDuration;
+      currentDuration = itemDuration(dashboards[currentIndex]);
+      currentCount = currentDuration;
     }
 
     function startRotation() {
       if (intervalRotator) clearInterval(intervalRotator);
       if (intervalTimer) clearInterval(intervalTimer);
-      intervalRotator = setInterval(nextSlide, timerDuration * 1000);
+      currentDuration = dashboards.length ? itemDuration(dashboards[currentIndex]) : defaultDuration;
+      currentCount = currentDuration;
+      intervalRotator = setInterval(nextSlide, currentDuration * 1000);
       intervalTimer = setInterval(() => {
         currentCount--;
-        timerEl.textContent = `Next update in: ${currentCount}s`;
-        if (currentCount <= 0) currentCount = timerDuration;
+        timerEl.textContent = `Next update in: ${Math.max(currentCount, 0)}s`;
+        if (currentCount <= 0) currentCount = currentDuration;
       }, 1000);
+      timerEl.textContent = `Next update in: ${currentCount}s`;
     }
 
-    // --- 4. EXPORTED FUNCTIONS ---
+    // --- 4. FOOTER: CLOCK, COUNT, QUICK SWITCHER ---
+    function updateFooterCount() {
+      const n = dashboards.length;
+      footerCount.textContent = n ? `${n} dashboard${n > 1 ? 's' : ''} — showing ${currentIndex + 1} of ${n}` : '0 dashboards';
+    }
+
+    (function clock() {
+      const tick = () => { footerClock.textContent = new Date().toLocaleTimeString(); };
+      tick();
+      setInterval(tick, 1000);
+    })();
+
+    function renderFooterSelect() {
+      footerSelect.innerHTML = "";
+      dashboards.forEach((d, i) => {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = d.title || d.url || `Item ${i + 1}`;
+        footerSelect.appendChild(opt);
+      });
+      if (currentIndex < dashboards.length) footerSelect.value = String(currentIndex);
+    }
+
+    // Rebuild the footer select whenever the item set changes
+    const _renderAdminList = renderAdminList;
+    renderAdminList = function () { _renderAdminList(); renderFooterSelect(); };
+
+    // --- 5. EXPORTED FUNCTIONS ---
     window.forceNext = () => {
-      currentCount = timerDuration;
+      if (!dashboards.length) return;
       nextSlide();
       if (!isPaused) startRotation();
     };
@@ -266,6 +501,8 @@
       if (isPaused) {
         clearInterval(intervalRotator);
         clearInterval(intervalTimer);
+        intervalRotator = null;
+        intervalTimer = null;
         timerEl.textContent = "Rotation Paused";
         timerEl.style.color = "red";
         btnPause.textContent = "Resume";
@@ -276,33 +513,70 @@
       }
     };
 
+    window.reloadCurrent = () => {
+      const frame = document.querySelector('iframe.active');
+      if (!frame) { toast("Nothing to reload."); return; }
+      toast("Reloading…");
+      // srcdoc guard: if the frame failed to load it may still hold the fallback page
+      if (frame.srcdoc) { frame.srcdoc = ""; }
+      frame.src = frame.src; // re-assign to force reload
+    };
+
+    window.jumpTo = (index) => {
+      index = Number(index);
+      if (!dashboards.length || index < 0 || index >= dashboards.length) return;
+      currentIndex = index;
+      showCurrentDashboard();
+      currentDuration = itemDuration(dashboards[currentIndex]);
+      currentCount = currentDuration;
+      if (!isPaused) startRotation();
+    };
+
     window.toggleAdmin = () => {
       document.getElementById('admin-panel').classList.toggle('open');
     };
 
     window.addDashboard = async () => {
-      const title = document.getElementById('new-title').value;
-      const url = document.getElementById('new-url').value;
-      if (title && url) {
-        try {
-          await addDoc(collection(db, dbCollection), { title, url, timestamp: Date.now() });
-          document.getElementById('new-title').value = '';
-          document.getElementById('new-url').value = '';
-        } catch (e) {
-          alert("Error: " + e.message);
-        }
+      if (!userIsAdmin) { toast("Log in first."); return; }
+      const title = document.getElementById('new-title').value.trim();
+      const url = document.getElementById('new-url').value.trim();
+      const durationRaw = document.getElementById('new-duration').value;
+      const duration = Math.floor(Number(durationRaw));
+
+      if (!url) { toast("URL is required."); return; }
+      // Auto-derive title from URL if not provided
+      const finalTitle = title || (() => {
+        try { return new URL(url).host + new URL(url).pathname; } catch { return url; }
+      })();
+
+      // Compute next order slot
+      const orders = dashboards.map(d => d.order).filter(o => o !== undefined && o !== null);
+      const nextOrder = (orders.length ? Math.max(...orders) : 0) + 1000;
+
+      const payload = { title: finalTitle, url, order: nextOrder, timestamp: Date.now() };
+      if (Number.isFinite(duration) && duration >= 5) payload.duration = duration;
+
+      try {
+        await addDoc(collection(db, dbCollection), payload);
+        document.getElementById('new-title').value = '';
+        document.getElementById('new-url').value = '';
+        document.getElementById('new-duration').value = '';
+        toast("Dashboard added.");
+      } catch (e) {
+        toast("Error: " + e.message);
       }
     };
 
     window.deleteItem = async (id) => {
-      if(confirm('Are you sure?')) {
-        try {
-          await deleteDoc(doc(db, dbCollection, id));
-        } catch(e) {
-          alert("Error: " + e.message);
-        }
+      if (!userIsAdmin) return;
+      if (!confirm('Are you sure?')) return;
+      try {
+        await deleteDoc(doc(db, dbCollection, id));
+        toast("Deleted.");
+      } catch (e) {
+        toast("Error: " + e.message);
       }
-    }
+    };
   </script>
 </body>
 </html>
